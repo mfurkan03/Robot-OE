@@ -37,4 +37,4 @@ def generate_speech(text, ref_audio,output_file = "last_output.wav"):
     )
     
     return "last_output.wav"  # Üretilen ses dosyasının yolu
-    
+                                                                                                                                                      

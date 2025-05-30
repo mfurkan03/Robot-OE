@@ -9,6 +9,10 @@ from typing import List
 import os
 import threading
 import queue
+import pyaudio
+import keyboard
+from google.cloud import speech                                                                                                    
+from speech_rec import recognize_speech_while_pressed
 
 audio_queue = queue.Queue()
 
@@ -22,7 +26,7 @@ def main(filename):
 
     messages = [{
         "role": "user",
-        "content": "Sen şu an kaba bir rehin dükkanı sahibisin (biraz kaba davranmaya dikkat et, doğallık için) ve ben seninle birazdan sahip olduğum bir ürünle ilgili pazarlık yapacağım. Benimle selamlaşarak ve ne satmak istediğimi sorarak diyaloğa başla. Satacağım ürünü benden olabildiğince ucuza satın alman gerekiyor ve sana yalan da söyleyebilirim bu ürünün fiyatı hakkında. Bu konularda araştırma yapıp bana yapabileceğin en ucuz teklifi yapman gerekiyor. Rehin dükkanı sahibi olduğunu ve bir ürünü ölücülük yaparak satın alman gerekiyor. Daha sonrasında da bu ürünü benden satın alıp beni ikna etmen gerekiyor. Eğer ürün sana pahalı gelirse satın alma. Ayrıca, bütün sayıları yazıyla yaz, rakamla yazma!"
+        "content": "Sen şu an kaba bir rehin dükkanı sahibisin (biraz kaba davranmaya dikkat et, doğallık için) ve ben seninle birazdan sahip olduğum bir ürünle ilgili pazarlık yapacağım. Benimle selamlaşarak ve ne satmak istediğimi sorarak diyaloğa başla. Satacağım ürünü benden olabildiğince ucuza satın alman gerekiyor ve sana yalan da söyleyebilirim bu ürünün fiyatı hakkında. Bu konularda araştırma yapıp bana yapabileceğin en ucuz teklifi yapman gerekiyor. Elimdeki ürün hakkında olabildiğince detay istemeye çalış ancak yapay zeka olduğun için ürünü göremeyeceğin gerçeğini unutma. Rehin dükkanı sahibi olduğunu ve bir ürünü ölücülük yaparak satın alman gerekiyor. Daha sonrasında da bu ürünü benden satın alıp beni ikna etmen gerekiyor. Eğer ürün sana pahalı gelirse satın alma. Ayrıca, bütün sayıları yazıyla yaz, rakamla yazma!"
             }
         ]
 
@@ -46,11 +50,21 @@ def main(filename):
 
         messages.append({"role": "assistant", "content": reply})
 
-        user_input = input("You: ")
-        #print("\n")
-        if user_input.lower() in {"exit", "quit"}:
-            print("👋 Goodbye!")
+        print("🎤 SPACE tuşuna basılı tutarak konuş (ESC ile çık)...")
+        while not keyboard.is_pressed('space') and not keyboard.is_pressed('esc'):
+            pass
+
+        if keyboard.is_pressed('esc'):
+            print("👋 Görüşürüz!")
             break
+
+        user_input = recognize_speech_while_pressed()
+        print("🗣️ Tanınan:", user_input, "\n")
+
+        if user_input.strip().lower() in {"exit", "çık", "quit"}:
+            print("👋 Görüşürüz!")
+            break
+
             
         messages.append({"role": "user", "content": user_input})
       # Bu satır, ses tamamen bitene kadar bekler
@@ -65,7 +79,7 @@ def audio_player_worker():
         playback.wait_done()
         audio_queue.task_done()
 
-# Player thread başlat
+# Player thread başlat                                                                                                                  
 player_thread = threading.Thread(target=audio_player_worker, daemon=True)
 player_thread.start()
 
